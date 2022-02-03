@@ -45,7 +45,7 @@ class TII2C {
     void readConfigurations(String regName);
     float readAngleData();
     void readXYZData();
-    void readMagnitudeData();
+    float readMagnitudeData();
     void IIC_Write(int8_t deviceAddress, int8_t registerAddress, int8_t dataToWrite);
     byte IIC_Read(int8_t deviceAddress, int8_t registerAddress);
     void hexToBinaryHelper(uint8_t a);

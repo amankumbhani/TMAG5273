@@ -3,29 +3,33 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#define VERSION 1.0.0
+#define VERSION 1.0.1
 
 /**
    @brief A constructor to initialise the values to default
 */
 TII2C::TII2C(int8_t deviceAddress) {
   this->deviceAddress = deviceAddress;
-  DEVICE_CONFIG_1_REGFIELD = 0x00;
-  DEVICE_CONFIG_2_REGFIELD = 0x00;
-  SENSOR_CONFIG_1_REGFIELD = 0x74;
-  SENSOR_CONFIG_2_REGFIELD = 0x04;
-  X_THR_CONFIG_REGFIELD = 0x00;
-  Y_THR_CONFIG_REGFIELD = 0x00;
-  Z_THR_CONFIG_REGFIELD = 0x00;
-  T_CONFIG_REGFIELD = 0x01;
-  INT_CONFIG_1_REGFIELD = 0x00;
-  MAG_GAIN_CONFIG_REGFIELD = 0x00;
-  MAG_OFFSET_CONFIG_1_REGFIELD = 0x00;
-  MAG_OFFSET_CONFIG_2_REGFIELD = 0x00;
-
+  DEVICE_CONFIG_1_REGFIELD = 0x00;      /// set to default 
+  DEVICE_CONFIG_2_REGFIELD = 0x00;      /// set to default
+  SENSOR_CONFIG_1_REGFIELD = 0x74;      /// 0b01110100 - First 4 bits for enabling X, Y & Z magnetic channels & next 4 bits (to LSB) setting sleep time to 20mS.
+  SENSOR_CONFIG_2_REGFIELD = 0x04;      /// 0b00000100 - X, Y and Z range set to default (40mT), angle channel X & Y enabled.
+  X_THR_CONFIG_REGFIELD = 0x00;         /// set to default
+  Y_THR_CONFIG_REGFIELD = 0x00;         /// set to default
+  Z_THR_CONFIG_REGFIELD = 0x00;         /// set to default
+  T_CONFIG_REGFIELD = 0x01;             /// 0b00000001 - Enabled data acquisition of temperature channel
+  INT_CONFIG_1_REGFIELD = 0x00;         /// set to default
+  MAG_GAIN_CONFIG_REGFIELD = 0x00;      /// set to default
+  MAG_OFFSET_CONFIG_1_REGFIELD = 0x00;  /// set to default
+  MAG_OFFSET_CONFIG_2_REGFIELD = 0x00;  /// set to default
   configureDevice();
 }
 
+/**
+    @brief A function called to initialise all the register field values to their respective states. In order to change the values
+    of any register field, use the . operator on the object created in your sketch to access the public member variables to set them,
+    and call the function below.
+*/
 void TII2C::configureDevice() {
   IIC_Write(deviceAddress, DEVICE_CONFIG_1, DEVICE_CONFIG_1_REGFIELD);
   IIC_Write(deviceAddress, DEVICE_CONFIG_2, DEVICE_CONFIG_2_REGFIELD);
@@ -41,6 +45,11 @@ void TII2C::configureDevice() {
   IIC_Write(deviceAddress, MAG_OFFSET_CONFIG_2, MAG_OFFSET_CONFIG_2_REGFIELD);
 }
 
+/**
+    @brief A function called to read configuration settings from the chip. It can be used to read the device ID, manufacturing ID,
+    CONV_STATUS register and the DEVICE_STATUS register.
+    @param[in] regName: A string indicating which register to be read (abbrevated form).
+*/
 void TII2C::readConfigurations(String regName) {
   if (regName.equals("DID")) { // read device ID
     byte receivedData = IIC_Read(deviceAddress, DEVICE_ID);
@@ -64,6 +73,11 @@ void TII2C::readConfigurations(String regName) {
   }
 }
 
+/**
+    @brief A function used to set the operating modes ONLY of the chip. 
+    @param[in] operatingMode: A string indicating the register that needs to be written (abbrevated form).
+
+*/
 void TII2C::setOperatingMode(String operatingMode) {
   if (operatingMode.equals("DC2")) {
     // set the operating mode for device configuration 2 register
@@ -80,6 +94,10 @@ void TII2C::setOperatingMode(String operatingMode) {
   }
 }
 
+/**
+    @brief A function that reads the angle data from the chip.
+    @return angle: returns the angle in degrees.
+*/
 float TII2C::readAngleData() {
   Wire.beginTransmission(deviceAddress); // transmit to device address
   Wire.write(ANGLE_RESULT_MSB); // sends register address
@@ -91,10 +109,7 @@ float TII2C::readAngleData() {
 
   float partA, partB;
   int n = ANGLE_RESULT;
-  int k = 0;
-  int mask = 1 << k;
-  int masked_n = n & mask;
-  int thebit = masked_n >> k;
+  int k, mask, masked_n, thebit = 0;
 
   for (int i = 4; i < 13; i++) {
     k = i;
@@ -114,15 +129,25 @@ float TII2C::readAngleData() {
   return angle;
 }
 
-void TII2C::readMagnitudeData() {
-
+/**
+    @brief A function used to read the magnitude data.
+*/
+byte TII2C::readMagnitudeData() {
+  Wire.beginTransmission(deviceAddress); // transmit to device address
+  Wire.write(MAGNITUDE_RESULT); // sends register address
+  Wire.endTransmission(1); // stop transmitting
+  Wire.requestFrom(deviceAddress, 1); // Ask for 2 bytes, once done, bus is released by default
+  byte result = Wire.read();
 }
 
+/**
+    @brief A function to read the X, Y & Z magnetic channel data and calculate the value in mT.
+*/
 void TII2C::readXYZData() {
   Wire.beginTransmission(deviceAddress); // transmit to device address
   Wire.write(X_MSB_RESULT); // sends register address
   Wire.endTransmission(1); // stop transmitting
-  Wire.requestFrom(X_MSB_RESULT, 7); // Ask for 2 bytes, once done, bus is released by default
+  Wire.requestFrom(deviceAddress, 7); // Ask for 7 bytes, once done, bus is released by default
   byte X_MSB = Wire.read();
   byte X_LSB = Wire.read();
   byte Y_MSB = Wire.read();
@@ -191,11 +216,15 @@ void TII2C::readXYZData() {
   Serial.println("Z Axis Magnetic Field in mT: " + String(BZ));
 }
 
+/**
+    @brief A function used to read the temperature from the chip. 
+    @return T: Temperature in degrees celcius.
+*/
 float TII2C::readTemperatureData() {
   Wire.beginTransmission(deviceAddress); // transmit to device address
   Wire.write(T_MSB_RESULT); // sends register address
   Wire.endTransmission(1); // stop transmitting
-  Wire.requestFrom(T_MSB_RESULT, 2); // Ask for 2 bytes, once done, bus is released by default
+  Wire.requestFrom(deviceAddress, 2); // Ask for 2 bytes, once done, bus is released by default
   byte LSB = Wire.read();
   byte MSB = Wire.read();
   int16_t temperatureData = ((MSB << 8) | LSB); //16bits that make up the temperature data
@@ -207,7 +236,9 @@ float TII2C::readTemperatureData() {
   return T;
 }
 
-// Function to convert binary to decimal
+/**
+    @brief A function that returns a decimal number given a binary number.
+*/
 int TII2C::binaryToDecimal(int16_t n)
 {
   int num = n;

@@ -4,23 +4,29 @@
 #include "TII2C.h"
 #include <Wire.h>
 
-#define WAIT_PERIOD_POST_READ 40000
-#define SAMPLING_PERIOD 100
-#define READ_PERIOD 20000
-#define deviceAddress 0x35
+#define WAIT_PERIOD_POST_READ 40000 //< the time in milliseconds till which you wish to read data
+#define SAMPLING_PERIOD 100     //< the time in milliseconds at which the data will be requested from the chip
+#define READ_PERIOD 20000       //< the period till which you need the X, Y & Z readings & temperature values
+#define deviceAddress 0x35      //< the device address with which you wish to communicate
 
-TII2C tiDevice(deviceAddress);
+TII2C tiDevice(deviceAddress);  //< creating an object of TIIC type to access member variables and member functions
 
+/**
+    @brief A function that is executed only once in an instance
+/*
 void setup() {
   Serial.begin(115200);
   Wire.begin();
   Wire.setClock(400000);
 }
 
+/**
+    @brief A function that is executed continuously
+/*
 void loop() {
-  float time_now_overall = millis();
-  unsigned long startMillis = millis();
-  unsigned long currentMillis;
+  float time_now_overall = millis();                // get the current time
+  unsigned long startMillis = millis();             // get the current time
+  unsigned long currentMillis;                      // declare a variable in which the currentTime will be stored during execution // of loops
   while (millis() < time_now_overall + READ_PERIOD)
   {
     // continuous read mode for 20 seconds
