@@ -51,6 +51,8 @@ Similarly, all of the functions of the IC can be made use of using the member fu
 ## Future Work
 In the next steps of developing this open-source library, we will be adding new members so that configuring each bit of a particular register is possible. For example, instead of creating a whole new data for the entire register manually to enable CRC, we just call the setCRC() function which does this using bit manupilation techniques. We can also experiment with various magnetic ranges and those features will also be released in the next version. 
 
+For any queries, free feel to connect at amankumbhani@gmail.com!
+
 ## Resources
 1. Wire library: https://www.arduino.cc/en/reference/wire
 2. TMAG5273 datasheet: https://www.ti.com/product/TMAG5273
