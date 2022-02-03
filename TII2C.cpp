@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#define VERSION 1.0.1
+#define VERSION 1.0.2
 
 /**
    @brief A constructor to initialise the values to default
@@ -132,12 +132,13 @@ float TII2C::readAngleData() {
 /**
     @brief A function used to read the magnitude data.
 */
-byte TII2C::readMagnitudeData() {
+float TII2C::readMagnitudeData() {
   Wire.beginTransmission(deviceAddress); // transmit to device address
   Wire.write(MAGNITUDE_RESULT); // sends register address
   Wire.endTransmission(1); // stop transmitting
   Wire.requestFrom(deviceAddress, 1); // Ask for 2 bytes, once done, bus is released by default
   byte result = Wire.read();
+  return binaryToDecimal(result);
 }
 
 /**

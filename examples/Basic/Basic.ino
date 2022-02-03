@@ -13,7 +13,7 @@ TII2C tiDevice(deviceAddress);  //< creating an object of TIIC type to access me
 
 /**
     @brief A function that is executed only once in an instance
-/*
+*/
 void setup() {
   Serial.begin(115200);
   Wire.begin();
@@ -22,7 +22,7 @@ void setup() {
 
 /**
     @brief A function that is executed continuously
-/*
+*/
 void loop() {
   float time_now_overall = millis();                // get the current time
   unsigned long startMillis = millis();             // get the current time
